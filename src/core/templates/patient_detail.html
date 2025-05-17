@@ -1,0 +1,150 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<a href="{% url 'patient_list' %}" class="text-decoration-none"> <- Back to Patient List</a>
+
+<div class="card mt-4">
+    <div class="card-body">
+
+<h4>{{ instance.name }} - {{ instance.patient_id }}</h4>
+
+<p>DOB: {{ instance.dob }}</p>
+<p>Gender: {{ instance.gender }}</p>
+<p>Phone: {{ instance.phone }}</p>
+<p>Address: {{ instance.address }}</p>
+<p>Email: {{ instance.email }}</p>
+
+    </div>
+</div>
+
+<div class="mt-4 d-flex justify-content-between">
+<h4>Medications</h4>
+{% if user_type == "Doctor" %}
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+    Add Medication
+</button>
+{% endif %}
+</div>
+{% if medications %}
+{% for medication in medications %}
+<div class="card mt-4">
+    <div class="card-body">
+<table class="table mt-2">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Medication</th>
+        <th scope="col">Prescription Date</th>
+        <th scope="col">Dosage per day</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ medication.medication.name }}</td>
+            <td>{{ medication.prescription_date }}</td>
+            <td>{{ medication.dosage_per_day }}</td>
+            <td>
+                {% if user_type == "Doctor" %}
+                <a href="#" class="btn btn-danger btn-sm">Delete</a>
+                {% elif user_type == "Nurse" %}
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#logModal-{{medication.id}}">Log Medication</button>
+                <div class="modal fade" id="logModal-{{medication.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h1 class="modal-title fs-5" id="exampleModalLabel">Log Medication</h1>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="post" action="{%url 'log_patient_medication' medication.id%}">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                {{ log_form.as_p }}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                            </div>
+                        </form>
+                
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<p>No medications found</p>
+{% endif %}
+
+
+<div class="mt-4 d-flex justify-content-between">
+<h4>Medication Logs</h4>
+</div>
+{% if logs %}
+<div class="card mt-4">
+    <div class="card-body">
+<table class="table mt-2">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Medication</th>
+        <th scope="col">Log Date</th>
+        <th scope="col">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+{% for log in logs %}
+
+        <tr>
+            <th scope="row">{{ forloop.counter }}</th>
+            <td>{{ log.patient_medication.medication.name }}</td>
+            <td>{{ log.log_datetime }}</td>
+            <td>{{ log.notes }}</td>
+        </tr>
+{% endfor %}
+    </tbody>
+</table>
+    </div>
+</div>
+{% else %}
+<p>No medication logs found</p>
+{% endif %}
+
+
+</div>
+
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Add New Patient</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="post" action="#">
+            {% csrf_token %}
+            <div class="modal-body">
+                {{ form.as_p }}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save changes</button>
+            </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+
+
+  
+{% endblock %}

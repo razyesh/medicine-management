@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}Patient List{% endblock %}
+
+{% block content %}
+{% if user_type == "Doctor" %}
+<a href="{% url 'patient_create' %}" type="button" class="btn btn-primary">
+    Add New Patient
+</a>
+{% endif %}
+<table class="table mt-4">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Patient ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Age</th>
+        <th scope="col">Gender</th>
+        <th scope="col">Phone</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+        {% for patient in patients %}
+      <tr>
+        <th scope="row">{{ forloop.counter }}</th>
+        <td>{{ patient.patient_id }}</td>
+        <td>{{ patient.name }}</td>
+        <td>{{ patient.dob }}</td>
+        <td>{{ patient.gender }}</td>
+        <td>{{ patient.phone }}</td>
+        <td>
+            <a href="{% url 'patient_detail' patient.pk %}" class="btn btn-primary">View</a>
+            
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
+  <!-- Modal -->
+  
+
+{% endblock %}

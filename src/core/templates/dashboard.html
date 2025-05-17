@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="mt-4">
+<h1>Welcome to Dashboard</h1>
+</div>
+
+<a href="{% url 'patient_list' %}" class="btn btn-primary">Patient List</a>
+
+{% endblock %}
