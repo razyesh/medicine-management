@@ -1,4 +1,3 @@
-
 from django.shortcuts import redirect, render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -23,17 +22,15 @@ class PatientListRetrieveView(DoctorNursePermissionMixin, ListView):
 
     def get_object(self):
         return self.get_queryset().get(pk=self.kwargs.get("pk"))
-    
-    
+
     def get_template_names(self):
         if self.kwargs.get("pk"):
             return ["patient_detail.html"]
         return super().get_template_names()
 
-
     def post(self, request, *args, **kwargs):
         if self.kwargs.get("pk") and request.user.groups.filter(name="Doctor").exists():
-            data = request.POST 
+            data = request.POST
             form = self.form_class(data)
             if form.is_valid():
                 form.save(commit=False)
@@ -44,7 +41,6 @@ class PatientListRetrieveView(DoctorNursePermissionMixin, ListView):
                 print(form.errors)
                 messages.error(request, "Medication added failed")
         return redirect("patient_detail", pk=self.kwargs.get("pk"))
-
 
     def get_context_data(self, **kwargs):
         if self.kwargs.get("pk"):
@@ -59,7 +55,6 @@ class PatientListRetrieveView(DoctorNursePermissionMixin, ListView):
         return super().get_context_data(**kwargs)
 
 
-
 class PatientCreateUpdateView(DoctorPermissionMixin, ListView):
     template_name = "patient_create.html"
     model = Patient
@@ -68,14 +63,14 @@ class PatientCreateUpdateView(DoctorPermissionMixin, ListView):
 
     def get_object(self):
         return self.get_queryset().get(pk=self.kwargs.get("pk"))
-    
+
     def post(self, request, *args, **kwargs):
         if self.kwargs.get("pk"):
             instance = self.get_object()
             form = self.form_class(request.POST, instance=instance)
         else:
             form = self.form_class(request.POST)
-        
+
         if form.is_valid():
             instance = form.save()
             messages.success(request, "Patient updated successfully")
@@ -84,7 +79,6 @@ class PatientCreateUpdateView(DoctorPermissionMixin, ListView):
             messages.error(request, "Patient updated failed")
             form = self.form_class(request.POST)
         return render(request, self.template_name, {"form": form})
-    
 
     def get_context_data(self, **kwargs):
         if self.kwargs.get("pk"):
@@ -108,3 +102,11 @@ def log_patient_medication(request, pk):
         else:
             messages.error(request, "Medication logged failed")
     return redirect("patient_detail", pk=pk)
+
+
+@login_required
+def delete_patient_medication(request, pk):
+    medication = PatientMedication.objects.get(pk=pk)
+    medication.delete()
+    messages.success(request, "Medication deleted successfully")
+    return redirect("patient_detail", pk=medication.patient.id)

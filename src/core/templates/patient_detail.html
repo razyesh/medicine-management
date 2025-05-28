@@ -48,7 +48,7 @@
             <td>{{ medication.dosage_per_day }}</td>
             <td>
                 {% if user_type == "Doctor" %}
-                <a href="#" class="btn btn-danger btn-sm">Delete</a>
+                <a href="{% url 'delete_patient_medication' medication.id %}" class="btn btn-danger btn-sm">Delete</a>
                 {% elif user_type == "Nurse" %}
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#logModal-{{medication.id}}">Log Medication</button>
                 <div class="modal fade" id="logModal-{{medication.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
