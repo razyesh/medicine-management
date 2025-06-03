@@ -1,17 +1,40 @@
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, TemplateView
 from django.contrib import messages
-
+from django.db.models import Count
+from datetime import timedelta
 from config.permission import DoctorPermissionMixin, DoctorNursePermissionMixin
 
-from src.core.models import Patient, PatientMedication, MedicationLog
+from src.core.models import Patient, PatientMedication, MedicationLog, Medication
 from src.core.forms import PatientForm, PatientMedicationForm, MedicationLogForm
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["number_of_patients"] = Patient.objects.all().count()
+        ctx["total_medication"] = Medication.objects.all().count()
+        ctx["total_logs"] = MedicationLog.objects.filter(
+            log_datetime__date=timezone.now().date()
+        ).count()
+        daily_medication_to_log = PatientMedication.objects.all().count()
+        ctx["daily_medication_to_log"] = daily_medication_to_log
+        ctx["daily_prescribed_patient"] = PatientMedication.objects.filter(
+            prescription_date=timezone.now().date()
+        ).count()
+        ctx["gender_count"] = Patient.objects.values("gender").annotate(
+            total=Count("id")
+        )
+        expiring = Medication.objects.filter(
+            expiry_date__lte=timezone.now().date() + timedelta(days=7)
+        ).count()
+        ctx["expiring_in_7_days"] = expiring
+        return ctx
 
 
 class PatientListRetrieveView(DoctorNursePermissionMixin, ListView):

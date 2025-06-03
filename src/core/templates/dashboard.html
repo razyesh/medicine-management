@@ -5,9 +5,377 @@
 {% block content %}
 
 <div class="mt-4">
-<h1>Welcome to Dashboard</h1>
+<h1>Hi, {{ request.user.username }}</h1>
+</div>
+<hr>
+<h4>Stats</h4>
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{number_of_patients}}</h5>
+                <p class="card-text">Number of Patients</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{total_medication}}</h5>
+                <p class="card-text">Total Medication</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{daily_medication_to_log}}</h5>
+                <p class="card-text">Daily Medication To Log</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{total_logs}}</h5>
+                <p class="card-text">Medication Logged (Today)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mt-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{daily_prescribed_patient}}</h5>
+                <p class="card-text">Daily Prescribed Patient</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mt-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    {% for gender in gender_count %}
+                        <span class="text-muted">{{gender.gender | title}}:</span> <strong>{{gender.total}}</strong>
+                    {% endfor %}
+                </h5>
+                <p class="card-text">Gender Count</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mt-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{expiring_in_7_days}}</h5>
+                <p class="card-text">Medication Expiring in 7 days</p>
+            </div>
+        </div>
+    </div>
+    
 </div>
 
-<a href="{% url 'patient_list' %}" class="btn btn-primary">Patient List</a>
+<div class="row">
+    <div class="col-md-6">
+<div class="mt-4 card shadow-sm border-start border-4 border-danger mb-3">
+    <div class="card-body d-flex align-items-start">
+      <div class="me-3">
+        <i class="fas fa-pills fa-2x text-primary"></i>
+      </div>
+      <div class="flex-grow-1">
+        <h5 class="card-title mb-1">Medication Reminder</h5>
+        <p class="card-text mb-2 text-muted">Patient (ID: 12) medication is about to happen.</p>
+        <small class="text-end text-secondary">
+          <i class="far fa-clock me-1"></i>Due in 10 minutes
+        </small>
+      </div>
+    </div>
+  </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mt-4 shadow-sm border-start border-4 border-success mb-3">
+            <div class="card-body d-flex align-items-start">
+              <div class="me-3">
+                <i class="fas fa-file-medical fa-2x text-success"></i>
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="card-title mb-1">New Prescription</h5>
+                <p class="card-text mb-2 text-muted">A new prescription has been added for the patient - 21.</p>
+                <small class="text-end text-secondary">
+                  <i class="far fa-clock me-1"></i>Just now
+                </small>
+              </div>
+            </div>
+          </div>
+        
+    </div>
+</div>
 
+<div class="row mt-4">
+    <div class="col-md-6">
+
+<figure class="card card-body highcharts-figure">
+    <div id="container"></div>
+    
+</figure>
+</div>
+<div class="col-md-6">
+
+    <figure class="card card-body highcharts-figure">
+        <div id="med-log-chart"></div>
+        
+    </figure>
+    </div>
+
+    <div class="col-md-6">
+
+        <figure class="card card-body highcharts-figure">
+            <div id="age-chart"></div>
+            
+        </figure>
+        </div>
+
+        <div class="col-md-6">
+
+            <figure class="card card-body highcharts-figure">
+                <div id="top-patients"></div>
+                
+            </figure>
+            </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+
+    Highcharts.chart('container', {
+        chart: {
+          type: 'pie',
+          custom: {},
+          events: {
+            render() {
+              const chart = this,
+                series = chart.series[0];
+              let customLabel = chart.options.chart.custom.label;
+  
+              if (!customLabel) {
+                customLabel = chart.options.chart.custom.label =
+                  chart.renderer.label(
+                    'Total<br/>' +
+                    '<strong>10 Patients</strong>'
+                  )
+                    .css({
+                      color: '#000',
+                      textAnchor: 'middle'
+                    })
+                    .add();
+              }
+  
+              const x = series.center[0] + chart.plotLeft,
+                y = series.center[1] + chart.plotTop -
+                (customLabel.attr('height') / 2);
+  
+              customLabel.attr({ x, y });
+              customLabel.css({
+                fontSize: `${series.center[2] / 12}px`
+              });
+            }
+          }
+        },
+        title: {
+          text: 'Patient Gender Distribution'
+        },
+        tooltip: {
+          pointFormat: '{series.name}: <b>{point.percentage:.0f}%</b>'
+        },
+        legend: {
+          enabled: false
+        },
+        plotOptions: {
+          series: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            borderRadius: 8,
+            dataLabels: [{
+              enabled: true,
+              distance: 20,
+              format: '{point.name}'
+            }, {
+              enabled: true,
+              distance: -15,
+              format: '{point.percentage:.0f}%',
+              style: {
+                fontSize: '0.9em'
+              }
+            }],
+            showInLegend: true
+          }
+        },
+        series: [{
+          name: 'Patients',
+          colorByPoint: true,
+          innerSize: '75%',
+          data: [{
+            name: 'Male',
+            y: 6
+          }, {
+            name: 'Female',
+            y: 4
+          }]
+        }]
+      });
+
+
+      Highcharts.chart('age-chart', {
+        chart: {
+          type: 'column'
+        },
+        title: {
+          text: 'Age Distribution of Patients'
+        },
+        xAxis: {
+          categories: ['0–20', '21–40', '41–60', '61–80', '81+'],
+          title: {
+            text: 'Age Groups'
+          }
+        },
+        yAxis: {
+          min: 0,
+          title: {
+            text: 'Number of Patients'
+          },
+          allowDecimals: false
+        },
+        tooltip: {
+          pointFormat: 'Patients: <b>{point.y}</b>'
+        },
+        series: [{
+          name: 'Patients',
+          data: [1, 4, 3, 2, 0],  // Example: 1 patient age 0–20, 4 in 21–40, etc.
+          color: '#4e73df'
+        }]
+      });
+
+
+      Highcharts.chart('med-log-chart', {
+        chart: {
+          type: 'line'
+        },
+        title: {
+          text: 'Medication Logs Over Time (10 Patients)'
+        },
+        xAxis: {
+          categories: ['2025-06-01', '2025-06-02', '2025-06-03', '2025-06-04', '2025-06-05', '2025-06-06', '2025-06-07'],
+          title: {
+            text: 'Date'
+          }
+        },
+        yAxis: {
+          title: {
+            text: 'Log Count'
+          },
+          allowDecimals: false
+        },
+        tooltip: {
+          shared: true,
+          crosshairs: true
+        },
+        plotOptions: {
+          line: {
+            marker: {
+              enabled: true
+            }
+          }
+        },
+        series: [
+          {
+            name: 'Patient 1',
+            data: [1, 1, 1, 1, 1, 1, 1]
+          },
+          {
+            name: 'Patient 2',
+            data: [1, 0, 1, 0, 1, 0, 1]
+          },
+          {
+            name: 'Patient 3',
+            data: [0, 1, 1, 1, 1, 0, 1]
+          },
+          {
+            name: 'Patient 4',
+            data: [1, 1, 1, 1, 0, 0, 0]
+          },
+          {
+            name: 'Patient 5',
+            data: [1, 1, 0, 0, 1, 1, 1]
+          },
+          {
+            name: 'Patient 6',
+            data: [0, 0, 0, 1, 1, 1, 1]
+          },
+          {
+            name: 'Patient 7',
+            data: [1, 1, 1, 0, 1, 1, 0]
+          },
+          {
+            name: 'Patient 8',
+            data: [0, 1, 1, 1, 0, 1, 1]
+          },
+          {
+            name: 'Patient 9',
+            data: [1, 0, 1, 1, 1, 1, 1]
+          },
+          {
+            name: 'Patient 10',
+            data: [1, 1, 0, 1, 1, 1, 0]
+          }
+        ]
+      });
+
+
+      Highcharts.chart('top-patients', {
+        chart: {
+          type: 'bar'
+        },
+        title: {
+          text: 'Top 5 Patients by Prescription Count'
+        },
+        xAxis: {
+          categories: ['Alice', 'Bob', 'Carlos', 'Diana', 'Ethan'],
+          title: {
+            text: 'Patients'
+          }
+        },
+        yAxis: {
+          min: 0,
+          title: {
+            text: 'Prescription Count',
+            align: 'high'
+          },
+          labels: {
+            overflow: 'justify'
+          },
+          allowDecimals: false
+        },
+        tooltip: {
+          valueSuffix: ' prescriptions'
+        },
+        plotOptions: {
+          bar: {
+            dataLabels: {
+              enabled: true
+            },
+            colorByPoint: true
+          }
+        },
+        legend: {
+          enabled: false
+        },
+        series: [{
+          name: 'Prescriptions',
+          data: [12, 10, 9, 7, 6]
+        }]
+      });
+    
+    
+</script>
 {% endblock %}
